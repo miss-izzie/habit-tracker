@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<!-- saved from url=(0266)file:///C:/Users/ole_i/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/local-agent-mode-sessions/4c494d50-f9ce-4f2f-bc00-a9557fcd5094/0771aed5-55ac-4709-bc23-f3d3f6f88326/local_05e2fbd6-2c46-4924-a247-3b8dad339f2e/outputs/habit-tracker_v41.html -->
+<html lang="en" style="--bg: #3e747e; --surface: hsl(189,34%,30%); --line: hsl(189,30%,40%); --track: hsl(189,28%,26%); --ink: hsl(189,18%,92%); --muted: hsl(189,14%,76%); --faint: hsl(189,14%,58%); --accent: hsl(189,62%,66%); --accent-dark: hsl(189,58%,58%); --accent-text: hsl(189,46%,82%); --accent-tint: hsl(189,34%,32%); --b1: hsl(189,30%,26%); --b2: hsl(189,40%,36%); --b3: hsl(189,50%,48%); --b4: hsl(189,60%,60%); --b5: hsl(189,64%,68%); --b1t: hsl(189,18%,88%); --b2t: hsl(189,18%,88%); --b3t: #ffffff; --b4t: hsl(189,30%,14%); --b5t: hsl(189,30%,14%); --danger: hsl(189,55%,62%);"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3e747e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Habits">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Habit &amp; Task Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMiAzMic+PGNpcmNsZSBjeD0nMTYnIGN5PScxNicgcj0nMTUnIGZpbGw9JyMzRkE3QkMnLz48cGF0aCBkPSdNOS41IDE2LjhsNC40IDQuNEwyMyAxMC41JyBmaWxsPSdub25lJyBzdHJva2U9JyNmZmYnIHN0cm9rZS13aWR0aD0nMy4yJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnLz48L3N2Zz4=">
+<style>
+  :root {
+    --bg: #F8EFF1; --surface: #FFFFFF; --ink: #322E30; --muted: #8A7C82; --faint: #C2B2BA;
+    --line: #E6DCE0; --accent: #D76E76; --accent-dark: #B85461; --accent-tint: #FBE7E9;
+    --accent-text: #B85461; --track: #F0E6EA;
+    --b1: #FBE7E9; --b2: #F4CCD2; --b3: #E8A0AB; --b4: #D76E76; --b5: #B85461;
+    --b1t: #B85461; --b2t: #B85461; --b3t: #5e2b34; --b4t: #fff; --b5t: #fff;
+    --danger: #b56b6b;
+  }
+
+  html, body { margin: 0; min-height: 100%; background: var(--bg); }
+  html { scrollbar-gutter: stable; }
+  body { padding: 14px; }
+
+  .wrap {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 28px 22px 36px;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.45;
+  }
+  .wrap * { box-sizing: border-box; }
+
+  .head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; margin-bottom: 26px; }
+  .ring-wrap { position: relative; width: 78px; height: 78px; }
+  .ring-bg { fill: none; stroke: var(--line); stroke-width: 7; }
+  .ring-fg { fill: none; stroke: var(--accent); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .55s cubic-bezier(.22,.61,.36,1); }
+  .ring-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+  .ring-done { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ring-tot { font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .emblem-ring { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .emblem-glyph { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .emblem-glyph-dot { fill: var(--accent); stroke: none; }
+
+  .head-text { min-width: 0; }
+  .eyebrow { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-text); margin-bottom: 2px; }
+  .head h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  .sub { font-size: 13px; color: var(--muted); margin: 3px 0 0; }
+
+  .edit-btn { align-self: start; background: none; border: none; color: var(--muted); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; cursor: pointer; padding: 4px 2px; }
+  .edit-btn:hover { color: var(--ink); }
+
+  .list { list-style: none; margin: 0; padding: 0; }
+  .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 15px 4px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: none; }
+  .row.dragging { opacity: .72; background: var(--surface); box-shadow: 0 6px 18px rgba(0,0,0,.13); border-radius: 10px; border-top-color: transparent; user-select: none; }
+
+  .check { width: 30px; height: 30px; border-radius: 50%; border: 1.6px solid var(--faint); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; flex: none; transition: background .2s ease, border-color .2s ease, transform .12s ease; }
+  .check:hover { border-color: var(--accent); }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .check.on:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .check:active { transform: scale(.92); }
+
+  .task-lead { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .task-lead i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); display: block; }
+
+  .move-wrap { position: relative; }
+  .bullet-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid transparent; background: none; cursor: pointer; flex: none; padding: 0; display: flex; align-items: center; justify-content: center; transition: border-color .15s ease; }
+  .bullet-btn i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); display: block; transition: background .15s ease, transform .15s ease; }
+  .bullet-btn:hover i, .bullet-btn[aria-expanded="true"] i { background: var(--accent); transform: scale(1.25); }
+  .bullet-btn:hover, .bullet-btn[aria-expanded="true"] { border-color: var(--line); }
+  .bullet-btn.committing i { background: var(--accent); transform: scale(1.25); }
+  .bullet-btn.committing { border-color: var(--line); }
+  .move-menu { position: absolute; left: 0; right: auto; top: 36px; z-index: 30; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 22px rgba(0,0,0,.12); padding: 6px; min-width: 132px; display: flex; flex-direction: column; gap: 2px; }
+  .move-cap { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 3px 9px 4px; }
+  .move-opt { font-family: inherit; font-size: 13.5px; color: var(--ink); background: none; border: none; border-radius: 7px; padding: 8px 11px; text-align: left; cursor: pointer; white-space: nowrap; transition: background .15s ease, color .15s ease; }
+  .move-opt:hover { background: var(--accent-tint); color: var(--accent-dark); }
+  .move-opt.danger { color: var(--danger); }
+  .move-opt.danger:hover { background: var(--accent-tint); color: var(--danger); }
+  .move-sep { height: 1px; background: var(--line); margin: 5px 6px; }
+
+  .mid { min-width: 0; }
+  .name { font-size: 15.5px; }
+  .taprow { display: block; width: 100%; text-align: left; background: none; border: none; font-family: inherit; font-size: 15.5px; color: var(--ink); cursor: pointer; padding: 0; line-height: 1.45; }
+  .taprow.today:hover { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+  .taprow.stage:hover { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+  .rename-input { font-size: 15.5px; font-family: inherit; color: var(--ink); border: none; border-bottom: 1px solid var(--accent); background: transparent; padding: 1px 0; width: 100%; }
+  .rename-input:focus { outline: none; }
+
+  .rename { font-size: 15.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--ink); border: none; border-bottom: 1px solid var(--line); background: transparent; padding: 1px 0; width: 100%; max-width: 240px; }
+  .rename:focus { outline: none; border-bottom-color: var(--accent); }
+
+  .grip { width: 30px; height: 30px; border: none; background: none; color: var(--faint); cursor: grab; flex: none; padding: 0; display: flex; align-items: center; justify-content: center; touch-action: none; transition: color .15s ease; }
+  .grip:hover { color: var(--muted); }
+  .grip:active { cursor: grabbing; }
+
+  .strip { display: flex; gap: 0; margin-top: 3px; margin-left: -4px; }
+  .daybtn { background: none; border: none; padding: 4px; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; line-height: 0; }
+  .daybtn:hover .dot:not(.filled) { background: var(--faint); }
+  .daybtn:hover .dot.filled { background: var(--accent-dark); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .dot.filled { background: var(--accent); }
+  .dot.is-today { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--faint); }
+  .dot.is-today.filled { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent-dark); }
+
+  .streak { text-align: right; flex: none; min-width: 42px; }
+  .streak-num { display: block; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1; }
+  .streak-lab { font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+  .hctl { display: flex; align-items: center; gap: 8px; }
+
+  .editctl { display: flex; gap: 6px; align-items: center; }
+  .iconbtn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; flex: none; display: flex; align-items: center; justify-content: center; }
+  .iconbtn:hover { border-color: var(--faint); color: var(--ink); }
+  .iconbtn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .empty-line { color: var(--faint); font-size: 14px; padding: 18px 4px; border-top: 1px solid var(--line); }
+  .list .empty-line:first-child { border-top: none; }
+
+  .add-row { display: flex; gap: 10px; align-items: center; padding: 15px 4px 0; margin-top: 0; border-top: 1px solid var(--line); }
+  .add-input { flex: 1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; }
+  .add-input::placeholder { color: var(--faint); }
+  .add-input:focus { outline: none; border-color: var(--accent); }
+  .add-btn { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #fff; background: var(--accent); border: none; border-radius: 9px; padding: 9px 16px; cursor: pointer; transition: background .2s ease; }
+  .add-btn:hover { background: var(--accent-dark); }
+  .add-btn:disabled { background: var(--faint); cursor: default; }
+
+  .donelog { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .done-toggle { background: none; border: none; color: var(--muted); font-family: inherit; font-size: 13px; cursor: pointer; padding: 2px 0; display: inline-flex; align-items: center; gap: 7px; }
+  .done-toggle:hover { color: var(--ink); }
+  .done-group { margin-top: 12px; }
+  .done-date { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+  .done-items { list-style: none; margin: 0; padding: 0; }
+  .done-items li { padding: 1px 0; }
+  .done-li { display: flex; align-items: baseline; gap: 6px; }
+  .done-li .done-item { flex: 1 1 auto; }
+  .done-del { background: none; border: none; color: var(--faint); font-size: 15px; line-height: 1; cursor: pointer; padding: 3px 6px; flex: none; }
+  .done-del:hover { color: var(--danger); }
+  .done-item { background: none; border: none; font-family: inherit; font-size: 14px; color: var(--muted); cursor: pointer; display: flex; gap: 9px; align-items: baseline; text-align: left; padding: 3px 0; width: 100%; }
+  .done-item:hover { color: var(--ink); }
+  .done-item:hover .dmark { color: var(--accent-dark); }
+  .dmark { color: var(--accent-text); flex: none; }
+
+  .foot { margin-top: 22px; font-size: 13px; }
+  .link { background: none; border: none; color: var(--muted); cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; padding: 2px 4px; }
+  .link:hover { color: var(--ink); }
+  .link.danger { color: var(--danger); }
+  .reset-confirm { color: var(--muted); display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .appear { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 13px; }
+  .appear-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+  .accent-picker { width: 30px; height: 30px; border: 1px solid var(--faint); border-radius: 8px; background: none; padding: 0; cursor: pointer; }
+  .accent-picker::-webkit-color-swatch-wrapper { padding: 2px; }
+  .accent-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
+  .accent-picker::-moz-color-swatch { border: none; border-radius: 5px; }
+  .data-foot { margin-top: 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; flex-wrap: wrap; }
+  .data-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+  .data-err { color: var(--danger); font-size: 12px; }
+
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .seg { display: flex; gap: 2px; background: var(--track); border-radius: 10px; padding: 2px; margin-bottom: 18px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg-btn { flex: 0 0 auto; white-space: nowrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: var(--muted); background: transparent; border: none; border-radius: 8px; padding: 6px 15px; cursor: pointer; transition: background .18s ease, color .18s ease; }
+  .seg-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+
+  .sk-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .sk-range { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sk-arrow { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 17px; line-height: 1; cursor: pointer; }
+  .sk-arrow:hover:not(:disabled) { color: var(--ink); border-color: var(--faint); }
+  .sk-arrow:disabled { opacity: .4; cursor: default; }
+
+  .sk-row { border-top: 1px solid var(--line); padding: 14px 4px; }
+  .sk-list .sk-row:first-child { border-top: none; }
+  .sk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sk-name { font-size: 15.5px; }
+  .sk-streak { text-align: right; flex: none; white-space: nowrap; }
+  .sk-cur { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .sk-cur.zero { color: var(--faint); }
+  .sk-lab { font-size: 11px; color: var(--muted); }
+  .sk-best { font-size: 11px; color: var(--faint); }
+
+  .sk-strip { display: flex; align-items: center; margin-top: 9px; }
+  .sk-cell { position: relative; display: inline-flex; padding: 2px; cursor: default; }
+  .sk-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); display: block; }
+  .sk-dot.on { background: var(--accent); }
+  .sk-cell.is-today .sk-dot { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--faint); }
+  .sk-cell.is-today .sk-dot.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent-dark); }
+  .sk-tip { position: absolute; bottom: 100%; left: 0; margin-bottom: 7px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 7px; padding: 4px 8px; font-size: 11px; white-space: nowrap; box-shadow: 0 8px 22px rgba(0,0,0,.12); opacity: 0; pointer-events: none; transition: opacity .15s ease; z-index: 30; }
+  .sk-cell.r .sk-tip { left: auto; right: 0; }
+  .sk-cell:hover .sk-tip, .sk-cell.tip-open .sk-tip, .sk-cell:focus-visible .sk-tip { opacity: 1; }
+
+  .sk-legend { display: flex; align-items: center; gap: 12px; justify-content: flex-end; margin-top: 14px; font-size: 10.5px; color: var(--faint); }
+  .sk-leg { display: inline-flex; align-items: center; gap: 5px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ring-fg, .check, .add-btn, .sk-tip, .seg-btn, .bullet-btn i { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap"><div id="app"><header class="head"><div class="ring-wrap" aria-hidden="true"><svg width="78" height="78" viewBox="0 0 78 78"><circle cx="39" cy="39" r="30" class="ring-bg"></circle><circle cx="39" cy="39" r="30" class="ring-fg" stroke-dasharray="188.49555921538757" stroke-dashoffset="119.95171950070119" transform="rotate(-90 39 39)"></circle></svg><div class="ring-num"><span class="ring-done">4</span><span class="ring-tot">/ 11</span></div></div><div class="head-text"><div class="eyebrow">Habits</div><h1>Saturday, June 27</h1><p class="sub">4 of 11 done so far.</p></div></header><div class="seg" role="tablist" aria-label="Choose view"><button class="seg-btn " data-act="nav-tab" data-view="tasklist">Task List</button><button class="seg-btn " data-act="nav-tab" data-view="nextup">Next Up</button><button class="seg-btn " data-act="nav-tab" data-view="todaytasks">Today</button><button class="seg-btn active" data-act="nav-tab" data-view="habits">Habits</button><button class="seg-btn " data-act="nav-tab" data-view="streak">Streak</button></div><ul class="list"><li class="row" data-id="wvoqzb5"><button class="check on" data-act="toggle" data-id="wvoqzb5" aria-pressed="true" aria-label="Mark not done"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="wvoqzb5" title="Tap to edit">Get up, wash, meditate, breakfast coffee</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot filled is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">1</span><span class="streak-lab">day</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="wn9pr0k"><button class="check on" data-act="toggle" data-id="wn9pr0k" aria-pressed="true" aria-label="Mark not done"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="wn9pr0k" title="Tap to edit">Pizzino videos and break (memory save)</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot filled is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">1</span><span class="streak-lab">day</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="gf01xwk"><button class="check on" data-act="toggle" data-id="gf01xwk" aria-pressed="true" aria-label="Mark not done"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="gf01xwk" title="Tap to edit">Go for an easy walk</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot filled is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">1</span><span class="streak-lab">day</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="yzk8f8e"><button class="check on" data-act="toggle" data-id="yzk8f8e" aria-pressed="true" aria-label="Mark not done"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="yzk8f8e" title="Tap to edit">Study TIA Courses and break (memory save)</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot filled is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">1</span><span class="streak-lab">day</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="mezssq1"><button class="check " data-act="toggle" data-id="mezssq1" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="mezssq1" title="Tap to edit">Tackle one higher-stakes task, and break</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="k6xv5on"><button class="check " data-act="toggle" data-id="k6xv5on" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="k6xv5on" title="Tap to edit">Lunch time</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="9jlwsof"><button class="check " data-act="toggle" data-id="9jlwsof" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="9jlwsof" title="Tap to edit">Tidying time, organize stuff, and break</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="v5uaph8"><button class="check " data-act="toggle" data-id="v5uaph8" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="v5uaph8" title="Tap to edit">PSE Material, and break (memory save)</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="qbi37eo"><button class="check " data-act="toggle" data-id="qbi37eo" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="qbi37eo" title="Tap to edit">Tackle one lower-stakes task that's been on my list for long</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="k1ozhd7"><button class="check " data-act="toggle" data-id="k1ozhd7" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="k1ozhd7" title="Tap to edit">Dinner time</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="row" data-id="zb1qhv1"><button class="check " data-act="toggle" data-id="zb1qhv1" aria-pressed="false" aria-label="Mark done"></button><div class="mid"><button class="taprow stage" data-act="rename" data-id="zb1qhv1" title="Tap to edit">Relax and enjoy, wind down</button><div class="strip" aria-hidden="true"><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot "></span><span class="dot  is-today"></span></div></div><div class="hctl"><div class="streak"><span class="streak-num">0</span><span class="streak-lab">days</span></div><button class="grip" data-grip="1" aria-label="Drag to reorder"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg></button></div></li><li class="add-row"><input class="add-input" id="addInput" placeholder="Add a habit…" value="" aria-label="New habit name"><button class="add-btn" data-act="add" disabled="">Add</button></li></ul><footer class="appear"><span class="appear-lab">Background</span><input type="color" class="accent-picker" id="bgInput" value="#3e747e" aria-label="Background color"><button class="link" data-act="bg-revert">Revert</button></footer><footer class="data-foot"><span class="data-lab">Backup</span><button class="link" data-act="export">Export</button><button class="link" data-act="import">Import</button><input type="file" id="importFile" accept="application/json,.json" style="display:none"></footer></div></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY = "habit-data-v2";          // habits + completions (unchanged)
+  var TASK_KEY = "habit-tasks-v1";     // task pipeline
+  var APPEAR_KEY = "habit-appearance-v1";
+  var DEFAULT_BG = "#F8EFF1";
+
+  var SEED = [
+    "Get up, wash, meditate, breakfast coffee",
+    "Pizzino videos and break (memory save)",
+    "Go for an easy walk",
+    "Study TIA Courses and break (memory save)",
+    "Tackle one higher-stakes task, and break",
+    "Lunch time",
+    "Tidying time, organize stuff, and break",
+    "PSE Material, and break (memory save)",
+    "Tackle one lower-stakes task that's been on my list for long",
+    "Dinner time",
+    "Relax and enjoy, wind down"
+  ];
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var GRIP_SVG = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg>';
+
+  var TAB_LABEL = { tasklist: "Task List", nextup: "Next Up", todaytasks: "Today", habits: "Habits", streak: "Streak" };
+  var TAB_OF = { tasklist: "list", nextup: "nextup", todaytasks: "today" };  // view -> task.tab
+
+  var TASK_GLYPH = {
+    tasklist: '<g class="emblem-glyph-dot"><circle cx="29.5" cy="33" r="1.7"></circle><circle cx="29.5" cy="39" r="1.7"></circle><circle cx="29.5" cy="45" r="1.7"></circle></g><g class="emblem-glyph"><line x1="35.5" y1="33" x2="50.5" y2="33"></line><line x1="35.5" y1="39" x2="50.5" y2="39"></line><line x1="35.5" y1="45" x2="50.5" y2="45"></line></g>',
+    nextup: '<g class="emblem-glyph"><line x1="29" y1="39" x2="49" y2="39"></line><polyline points="42,31 50,39 42,47"></polyline></g>',
+    todaytasks: '<g class="emblem-glyph"><circle cx="39" cy="39" r="5"></circle><line x1="39" y1="29.5" x2="39" y2="26.5"></line><line x1="39" y1="48.5" x2="39" y2="51.5"></line><line x1="29.5" y1="39" x2="26.5" y2="39"></line><line x1="48.5" y1="39" x2="51.5" y2="39"></line><line x1="32.28" y1="32.28" x2="30.16" y2="30.16"></line><line x1="45.72" y1="32.28" x2="47.84" y2="30.16"></line><line x1="32.28" y1="45.72" x2="30.16" y2="47.84"></line><line x1="45.72" y1="45.72" x2="47.84" y2="47.84"></line></g>'
+  };
+
+  // ---- date helpers (local time, never UTC) ----
+  function fmt(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+  function today() { return fmt(new Date()); }
+  function lastNDays(n) {
+    var out = [];
+    for (var i = n - 1; i >= 0; i--) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      out.push(fmt(d));
+    }
+    return out;
+  }
+  function streakOf(dates) {
+    var set = {};
+    dates.forEach(function (x) { set[x] = true; });
+    var streak = 0;
+    var d = new Date();
+    if (!set[fmt(d)]) d.setDate(d.getDate() - 1);
+    while (set[fmt(d)]) { streak++; d.setDate(d.getDate() - 1); }
+    return streak;
+  }
+  function relDate(ds) {
+    if (ds === today()) return "Today";
+    var y = new Date(); y.setDate(y.getDate() - 1);
+    if (ds === fmt(y)) return "Yesterday";
+    return new Date(ds + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  }
+  function dateOffset(n) { var d = new Date(); d.setDate(d.getDate() - n); return d; }
+  function shortDate(d) { return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
+  function fullDate(d) { return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); }
+  // longest run of consecutive calendar days in a completion-date list (all-time)
+  function bestStreakOf(dates) {
+    if (!dates.length) return 0;
+    var sorted = dates.slice().sort();
+    var best = 1, run = 1;
+    for (var i = 1; i < sorted.length; i++) {
+      var prev = new Date(sorted[i - 1] + "T00:00:00");
+      var cur = new Date(sorted[i] + "T00:00:00");
+      var diff = Math.round((cur - prev) / 86400000);
+      if (diff === 1) { run++; if (run > best) best = run; }
+      else if (diff !== 0) { run = 1; }
+    }
+    return best;
+  }
+  function niceDate() { return new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // ---- color helpers ----
+  function cl(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function hexToHsl(hex) {
+    hex = String(hex).replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var r = parseInt(hex.slice(0, 2), 16) / 255,
+        g = parseInt(hex.slice(2, 4), 16) / 255,
+        b = parseInt(hex.slice(4, 6), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), h, s, l = (max + min) / 2;
+    if (max === min) { h = 0; s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+  function luma(hex) {
+    hex = String(hex).replace("#", "");
+    if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+    var r = parseInt(hex.slice(0, 2), 16) / 255,
+        g = parseInt(hex.slice(2, 4), 16) / 255,
+        b = parseInt(hex.slice(4, 6), 16) / 255;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function applyTheme() {
+    var B = appearance.bg || DEFAULT_BG;
+    var c = hexToHsl(B), h = c.h, s = c.s, l = c.l;
+    var dark = luma(B) < 0.42;
+    var rs = document.documentElement.style;
+    function set(k, v) { rs.setProperty(k, v); }
+    function H(hh, ss, ll) { return "hsl(" + hh + "," + ss + "%," + ll + "%)"; }
+
+    set("--bg", B);
+    if (!dark) {
+      set("--surface", H(h, cl(s, 0, 35), 99));
+      set("--line", H(h, cl(s, 8, 26), cl(l - 8, 55, 90)));
+      set("--track", H(h, cl(s, 6, 18), cl(l - 6, 72, 92)));
+      set("--ink", H(h, 14, 18));
+      set("--muted", H(h, 12, cl(l - 42, 30, 54)));
+      set("--faint", H(h, 16, cl(l - 22, 40, 76)));
+      set("--accent", H(h, 54, 62));
+      set("--accent-dark", H(h, 48, 50));
+      set("--accent-text", H(h, cl(s + 12, 42, 70), cl(l - 38, 22, 46)));
+      set("--accent-tint", H(h, 50, 93));
+      set("--b1", H(h, 46, 93)); set("--b2", H(h, 50, 86)); set("--b3", H(h, 52, 75));
+      set("--b4", H(h, 54, 62)); set("--b5", H(h, 48, 50));
+      set("--b1t", H(h, 48, 46)); set("--b2t", H(h, 48, 46)); set("--b3t", H(h, 45, 26));
+      set("--b4t", "#ffffff"); set("--b5t", "#ffffff");
+      set("--danger", H(h, 52, 52));
+    } else {
+      var surfL = cl(l + 9, 12, 30), lineL = cl(l + 16, 16, 40);
+      set("--surface", H(h, cl(s, 10, 40), surfL));
+      set("--line", H(h, cl(s, 8, 30), lineL));
+      set("--track", H(h, cl(s, 10, 28), cl(l + 6, 14, 26)));
+      set("--ink", H(h, 18, 92));
+      set("--muted", H(h, 14, cl(l + 50, 60, 76)));
+      set("--faint", H(h, 14, cl(l + 34, 42, 58)));
+      set("--accent", H(h, 62, 66));
+      set("--accent-dark", H(h, 58, 58));
+      set("--accent-text", H(h, cl(s + 12, 45, 75), cl(l + 46, 60, 82)));
+      set("--accent-tint", H(h, cl(s, 15, 40), cl(l + 12, 16, 32)));
+      set("--b1", H(h, 30, cl(l + 8, 14, 26))); set("--b2", H(h, 40, cl(l + 16, 20, 36))); set("--b3", H(h, 50, 48));
+      set("--b4", H(h, 60, 60)); set("--b5", H(h, 64, 68));
+      set("--b1t", H(h, 18, 88)); set("--b2t", H(h, 18, 88)); set("--b3t", "#ffffff");
+      set("--b4t", H(h, 30, 14)); set("--b5t", H(h, 30, 14));
+      set("--danger", H(h, 55, 62));
+    }
+    var meta = document.querySelector("meta[name=theme-color]");
+    if (meta) meta.setAttribute("content", B);
+  }
+
+  // ---- state ----
+  var habits = [];
+  var completions = {};
+  var tasks = [];                 // {id, name, tab:"list"|"nextup"|"today", done, doneDate}
+  var appearance = { bg: DEFAULT_BG };
+  var view = "habits";            // tasklist | nextup | todaytasks | habits | streak
+  var doneOpen = false;
+  var openMoveId = null;
+  var renameId = null;
+  var renameOrig = null;
+  var newName = "";
+  var importConfirm = false, pendingImport = null, importError = "";
+  var streakWin = 0;            // Streak tab: 0 = most recent 4 weeks, +1 per page back
+
+  var app = document.getElementById("app");
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var d = JSON.parse(raw); habits = d.habits || []; completions = d.completions || {}; }
+      else { seed(); }
+    } catch (e) { seed(); }
+    try {
+      var rt = localStorage.getItem(TASK_KEY);
+      if (rt) { var dt = JSON.parse(rt); tasks = dt.tasks || []; }
+    } catch (e) { tasks = []; }
+    try {
+      var ra = localStorage.getItem(APPEAR_KEY);
+      if (ra) { var pa = JSON.parse(ra) || {}; appearance = { bg: pa.bg || DEFAULT_BG }; }
+    } catch (e) { appearance = { bg: DEFAULT_BG }; }
+    if (!appearance.bg) appearance.bg = DEFAULT_BG;
+  }
+  function seed() {
+    habits = SEED.map(function (n) { return { id: uid(), name: n }; });
+    completions = {};
+    save();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ habits: habits, completions: completions })); } catch (e) {}
+    try { localStorage.setItem(TASK_KEY, JSON.stringify({ tasks: tasks })); } catch (e) {}
+  }
+  function saveAppearance() {
+    try { localStorage.setItem(APPEAR_KEY, JSON.stringify(appearance)); } catch (e) {}
+  }
+
+  // ---- derived (habits): streak math lives in the date helpers above ----
+
+  // ---- actions: habits ----
+  function toggle(id) {
+    var t = today();
+    var dates = completions[id] || [];
+    completions[id] = dates.indexOf(t) !== -1
+      ? dates.filter(function (d) { return d !== t; })
+      : dates.concat([t]);
+    save(); render();
+  }
+  function toggleHabitDay(id, ds) {
+    var dates = completions[id] || [];
+    completions[id] = dates.indexOf(ds) !== -1
+      ? dates.filter(function (d) { return d !== ds; })
+      : dates.concat([ds]);
+    save(); render();
+  }
+  function addHabit() {
+    var name = newName.trim();
+    if (!name) return;
+    habits.push({ id: uid(), name: name });
+    newName = "";
+    save(); render();
+    var inp = document.getElementById("addInput");
+    if (inp) inp.focus();
+  }
+  function remove(id) {
+    habits = habits.filter(function (x) { return x.id !== id; });
+    delete completions[id];
+    if (renameId === id) { renameId = null; renameOrig = null; }
+    openMoveId = null;
+    save(); render();
+  }
+  function commitHabitOrder(ids) {
+    var byId = {};
+    habits.forEach(function (h) { byId[h.id] = h; });
+    var next = ids.map(function (id) { return byId[id]; }).filter(Boolean);
+    if (next.length === habits.length) habits = next;
+    save(); render();
+  }
+
+  // ---- actions: tasks ----
+  function taskIndex(id) {
+    for (var i = 0; i < tasks.length; i++) { if (tasks[i].id === id) return i; }
+    return -1;
+  }
+  function habitIndex(id) {
+    for (var i = 0; i < habits.length; i++) { if (habits[i].id === id) return i; }
+    return -1;
+  }
+  function curList() { return view === "habits" ? habits : tasks; }
+  function curIndex(id) { return view === "habits" ? habitIndex(id) : taskIndex(id); }
+  function addTask() {
+    var name = newName.trim();
+    if (!name) return;
+    tasks.push({ id: uid(), name: name, tab: TAB_OF[view], done: false, doneDate: null });
+    newName = ""; openMoveId = null;
+    save(); render();
+    var inp = document.getElementById("addInput");
+    if (inp) inp.focus();
+  }
+  function removeTask(id) {
+    tasks = tasks.filter(function (t) { return t.id !== id; });
+    openMoveId = null;
+    if (renameId === id) { renameId = null; renameOrig = null; }
+    save(); render();
+  }
+  function moveTask(id, tab) {
+    var i = taskIndex(id);
+    if (i < 0) return;
+    var t = tasks.splice(i, 1)[0];
+    t.tab = tab; t.done = false; t.doneDate = null;
+    tasks.push(t);              // lands at the end of its new tab group
+    openMoveId = null;
+    save(); render();
+  }
+  function toggleTask(id) {
+    var t = tasks[taskIndex(id)];
+    if (!t) return;
+    if (t.done) { t.done = false; t.doneDate = null; }
+    else { t.done = true; t.doneDate = today(); }
+    save(); render();
+  }
+  function undone(id) {
+    var t = tasks[taskIndex(id)];
+    if (t) { t.done = false; t.doneDate = null; save(); render(); }
+  }
+  function enterRename(id) {
+    var item = curList()[curIndex(id)];
+    if (!item) return;
+    renameId = id; renameOrig = item.name; openMoveId = null;
+    render();
+  }
+  function commitRename() {
+    if (renameId == null) return;
+    var item = curList()[curIndex(renameId)];
+    if (item) {
+      var v = String(item.name || "").trim();
+      item.name = v ? v : renameOrig;
+      save();
+    }
+    renameId = null; renameOrig = null;
+    render();
+  }
+  function cancelRename() {
+    if (renameId == null) return;
+    var item = curList()[curIndex(renameId)];
+    if (item) { item.name = renameOrig; save(); }
+    renameId = null; renameOrig = null;
+    render();
+  }
+  function commitDragOrder(tabVal, orderIds) {
+    var queue = orderIds.map(function (id) { return tasks[taskIndex(id)]; }).filter(Boolean);
+    var k = 0;
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].tab === tabVal && !tasks[i].done) {
+        if (k < queue.length) tasks[i] = queue[k++];
+      }
+    }
+    save(); render();
+  }
+
+  // ---- actions: backup ----
+  function exportData() {
+    var payload = {
+      app: "habit-task-tracker", version: 1, exportedAt: new Date().toISOString(),
+      habitData: { habits: habits, completions: completions },
+      taskData: { tasks: tasks },
+      appearance: { bg: appearance.bg || DEFAULT_BG }
+    };
+    try {
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "habit-tracker-backup-" + today() + ".json";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    } catch (e) { importError = "Couldn't export."; render(); }
+  }
+  function applyImport() {
+    var o = pendingImport;
+    if (o) {
+      if (o.habitData) { habits = o.habitData.habits || []; completions = o.habitData.completions || {}; }
+      if (o.taskData) { tasks = o.taskData.tasks || []; }
+      if (o.appearance && o.appearance.bg) { appearance = { bg: o.appearance.bg }; }
+      save(); saveAppearance(); applyTheme();
+    }
+    importConfirm = false; pendingImport = null; importError = "";
+    view = "habits"; render();
+  }
+
+  // ---- markup: header ----
+  function subFor() {
+    if (view === "habits") {
+      var t = today();
+      var done = habits.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
+      var total = habits.length;
+      return total === 0 ? "No habits yet — add your first below."
+        : done === total ? "All done. Quietly excellent."
+        : done + " of " + total + " done so far.";
+    }
+    if (view === "streak") return habits.length ? "Each habit\u2019s consistency." : "No habits yet \u2014 add some on the Habits tab.";
+    var tabVal = TAB_OF[view];
+    var n = tasks.filter(function (t) { return t.tab === tabVal && !t.done; }).length;
+    if (view === "tasklist") return n ? n + " task" + (n === 1 ? "" : "s") + " waiting." : "Nothing on the list.";
+    if (view === "nextup") return n ? n + " queued up next." : "Next Up is clear.";
+    return n ? n + " to do today." : "Today is clear.";
+  }
+  function emblemHTML() {
+    var isHabit = (view === "habits" || view === "streak");
+    if (isHabit) {
+      var t = today();
+      var done = habits.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
+      var total = habits.length, pct = total ? done / total : 0, R = 30, C = 2 * Math.PI * R;
+      return '<div class="ring-wrap" aria-hidden="true"><svg width="78" height="78" viewBox="0 0 78 78">' +
+        '<circle cx="39" cy="39" r="' + R + '" class="ring-bg"></circle>' +
+        '<circle cx="39" cy="39" r="' + R + '" class="ring-fg" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - pct)) + '" transform="rotate(-90 39 39)"></circle>' +
+        '</svg><div class="ring-num"><span class="ring-done">' + done + '</span><span class="ring-tot">/ ' + total + '</span></div></div>';
+    }
+    return '<div class="ring-wrap" aria-hidden="true"><svg width="78" height="78" viewBox="0 0 78 78">' +
+      '<circle cx="39" cy="39" r="30" class="emblem-ring"></circle>' + (TASK_GLYPH[view] || "") + '</svg></div>';
+  }
+  function headerHTML() {
+    return '<header class="head">' + emblemHTML() +
+      '<div class="head-text"><div class="eyebrow">' + esc(TAB_LABEL[view]) + '</div><h1>' + esc(niceDate()) + '</h1>' +
+      '<p class="sub">' + esc(subFor()) + '</p></div>' +
+      '</header>';
+  }
+
+  // ---- markup: tabs ----
+  function tabsHTML() {
+    var defs = [["tasklist", "Task List"], ["nextup", "Next Up"], ["todaytasks", "Today"], ["habits", "Habits"], ["streak", "Streak"]];
+    return '<div class="seg" role="tablist" aria-label="Choose view">' + defs.map(function (d) {
+      return '<button class="seg-btn ' + (view === d[0] ? "active" : "") + '" data-act="nav-tab" data-view="' + d[0] + '">' + d[1] + '</button>';
+    }).join("") + '</div>';
+  }
+
+  // ---- markup: task views ----
+  function moveMenuHTML(tabVal, id) {
+    var moves = {
+      list:   [["nextup", "Next Up"], ["today", "Today"]],
+      nextup: [["today", "Today"], ["list", "Task List"]],
+      today:  [["nextup", "Next Up"], ["list", "Task List"]]
+    };
+    var opts = moves[tabVal].map(function (d) {
+      return '<button class="move-opt" role="menuitem" data-act="move" data-id="' + id + '" data-to="' + d[0] + '">' + d[1] + '</button>';
+    }).join("");
+    var moveGroup = '<div class="move-cap">Move to</div>' + opts;
+    var h = '<div class="move-menu" role="menu">';
+    if (tabVal === "today") {
+      h += '<button class="move-opt" role="menuitem" data-act="rename" data-id="' + id + '">Edit</button>';
+      h += '<div class="move-sep"></div>';
+      h += moveGroup;
+    } else {
+      h += moveGroup;
+    }
+    h += '</div>';
+    return h;
+  }
+  function addPlaceholder(tabVal) {
+    if (tabVal === "today") return "Add for today\u2026";
+    if (tabVal === "nextup") return "Add to Next Up\u2026";
+    return "Add a task\u2026";
+  }
+  function emptyLine(tabVal) {
+    if (tabVal === "today") return "Nothing queued for today yet.";
+    if (tabVal === "nextup") return "Next Up is clear \u2014 pull something over from your list.";
+    return "Your task list is empty.";
+  }
+  function doneLogHTML() {
+    var done = tasks.filter(function (t) { return t.done; });
+    if (!done.length) return "";
+    var groups = {};
+    done.forEach(function (t) { (groups[t.doneDate] = groups[t.doneDate] || []).push(t); });
+    var dates = Object.keys(groups).sort().reverse();
+    var h = '<div class="donelog"><button class="done-toggle" data-act="toggle-done">' +
+      (doneOpen ? "\u25BE" : "\u25B8") + ' Done (' + done.length + ')</button>';
+    if (doneOpen) {
+      dates.forEach(function (ds) {
+        h += '<div class="done-group"><div class="done-date">' + esc(relDate(ds)) + '</div><ul class="done-items">';
+        groups[ds].forEach(function (t) {
+          h += '<li class="done-li"><button class="done-item" data-act="undone" data-id="' + t.id + '"><span class="dmark">\u2713</span>' + esc(t.name) + '</button><button class="done-del" data-act="del" data-id="' + t.id + '" aria-label="Delete task">\u00D7</button></li>';
+        });
+        h += '</ul></div>';
+      });
+    }
+    h += '</div>';
+    return h;
+  }
+  function taskViewHTML(tabVal) {
+    var items = tasks.filter(function (t) { return t.tab === tabVal && !t.done; });
+    var h = '<ul class="list">';
+    if (!items.length) {
+      h += '<li class="empty-line">' + esc(emptyLine(tabVal)) + '</li>';
+    }
+    items.forEach(function (t) {
+      var renaming = (renameId === t.id);
+      h += '<li class="row" data-id="' + t.id + '">';
+      if (renaming) {
+        h += '<button class="bullet-btn committing" data-act="rename-done" data-id="' + t.id + '" aria-label="Done editing"><i></i></button>';
+        h += '<div class="mid"><input class="rename-input" value="' + esc(t.name) + '" aria-label="Edit task"></div>';
+        h += '<button class="iconbtn danger" data-act="del" data-id="' + t.id + '" aria-label="Delete task">\u00D7</button>';
+      } else {
+        h += '<div class="move-wrap"><button class="bullet-btn" data-act="move-open" data-id="' + t.id + '" aria-expanded="' + (openMoveId === t.id) + '" aria-label="Task options"><i></i></button>' +
+          (openMoveId === t.id ? moveMenuHTML(tabVal, t.id) : "") + '</div>';
+        if (tabVal === "today") {
+          h += '<div class="mid"><button class="taprow today" data-act="task-toggle" data-id="' + t.id + '" title="Tap to complete">' + esc(t.name) + '</button></div>';
+        } else {
+          h += '<div class="mid"><button class="taprow stage" data-act="rename" data-id="' + t.id + '" title="Tap to edit">' + esc(t.name) + '</button></div>';
+        }
+        h += '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button>';
+      }
+      h += '</li>';
+    });
+    h += '<li class="add-row">' +
+      '<input class="add-input" id="addInput" placeholder="' + esc(addPlaceholder(tabVal)) + '" value="' + esc(newName) + '" aria-label="New task">' +
+      '<button class="add-btn" data-act="add"' + (newName.trim() ? "" : " disabled") + '>Add</button></li></ul>';
+    if (tabVal === "today") h += doneLogHTML();
+    return h;
+  }
+
+  // ---- markup: habits list ----
+  function habitsListHTML() {
+    var t = today();
+    var h = '<ul class="list">';
+    habits.forEach(function (hh) {
+      var dates = completions[hh.id] || [];
+      var isDone = dates.indexOf(t) !== -1;
+      var streak = streakOf(dates);
+      var renaming = (renameId === hh.id);
+      var stripHTML = lastNDays(7).map(function (d) {
+        var on = dates.indexOf(d) !== -1;
+        var lab = esc(hh.name + ", " + relDate(d) + ", " + (on ? "done" : "not done") + " \u2014 tap to toggle");
+        return '<button class="daybtn" data-act="day-toggle" data-habit="' + hh.id + '" data-date="' + d + '" aria-label="' + lab + '" title="' + esc(relDate(d)) + '"><span class="dot ' + (on ? "filled" : "") + (d === t ? " is-today" : "") + '"></span></button>';
+      }).join("");
+      h += '<li class="row" data-id="' + hh.id + '">' +
+        '<button class="check ' + (isDone ? "on" : "") + '" data-act="toggle" data-id="' + hh.id + '" aria-pressed="' + isDone + '" aria-label="' + (isDone ? "Mark not done" : "Mark done") + '">' + (isDone ? CHECK_SVG : "") + '</button>' +
+        '<div class="mid">' +
+        (renaming
+          ? '<input class="rename-input" value="' + esc(hh.name) + '" aria-label="Edit habit">'
+          : '<button class="taprow stage" data-act="rename" data-id="' + hh.id + '" title="Tap to edit">' + esc(hh.name) + '</button>') +
+        '<div class="strip">' + stripHTML + '</div></div>' +
+        (renaming
+          ? '<button class="iconbtn danger" data-act="del" data-id="' + hh.id + '" aria-label="Delete habit">\u00D7</button>'
+          : '<div class="hctl"><div class="streak"><span class="streak-num">' + streak + '</span><span class="streak-lab">day' + (streak === 1 ? "" : "s") + '</span></div>' +
+            '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button></div>') +
+        '</li>';
+    });
+    h += '<li class="add-row">' +
+      '<input class="add-input" id="addInput" placeholder="Add a habit\u2026" value="' + esc(newName) + '" aria-label="New habit name">' +
+      '<button class="add-btn" data-act="add"' + (newName.trim() ? "" : " disabled") + '>Add</button></li></ul>';
+    return h;
+  }
+
+  // ---- markup: streak (per-habit consistency) ----
+  function streakHTML() {
+    var winDays = [];
+    for (var i = 0; i < 28; i++) {
+      var off = 28 * streakWin + (27 - i);
+      winDays.push({ ds: fmt(dateOffset(off)), off: off, date: dateOffset(off) });
+    }
+    var earliest = null;
+    habits.forEach(function (hh) {
+      (completions[hh.id] || []).forEach(function (d) { if (earliest === null || d < earliest) earliest = d; });
+    });
+    var canPrev = earliest != null && winDays[0].ds > earliest;
+    var canNext = streakWin > 0;
+
+    var h = '<div class="sk-nav">' +
+      '<button class="sk-arrow" data-act="streak-prev"' + (canPrev ? "" : " disabled") + ' aria-label="Earlier weeks">\u2039</button>' +
+      '<span class="sk-range">' + esc(shortDate(winDays[0].date) + " \u2013 " + shortDate(winDays[27].date)) + '</span>' +
+      '<button class="sk-arrow" data-act="streak-next"' + (canNext ? "" : " disabled") + ' aria-label="Later weeks">\u203A</button>' +
+      '</div>';
+
+    if (!habits.length) {
+      return h + '<div class="empty-line" style="border-top:none">No habits yet \u2014 add some on the Habits tab.</div>';
+    }
+
+    h += '<ul class="list sk-list">';
+    habits.forEach(function (hh) {
+      var dates = completions[hh.id] || [];
+      var set = {};
+      dates.forEach(function (x) { set[x] = true; });
+      var cur = streakOf(dates), bst = bestStreakOf(dates);
+      var strip = "";
+      winDays.forEach(function (wd, p) {
+        var on = !!set[wd.ds];
+        var isToday = wd.off === 0;
+        var lab = fullDate(wd.date) + (isToday ? " (today)" : "") + " \u00B7 " + (on ? "done" : "missed");
+        strip += '<span class="sk-cell' + (p >= 14 ? " r" : "") + (isToday ? " is-today" : "") +
+          '" tabindex="0" role="img" aria-label="' + esc(lab) + '">' +
+          '<span class="sk-dot' + (on ? " on" : "") + '"></span>' +
+          '<span class="sk-tip">' + esc(lab) + '</span></span>';
+      });
+      h += '<li class="sk-row"><div class="sk-head">' +
+        '<span class="sk-name">' + esc(hh.name) + '</span>' +
+        '<span class="sk-streak"><span class="sk-cur' + (cur === 0 ? " zero" : "") + '">' + cur + '</span>' +
+        '<span class="sk-lab"> day' + (cur === 1 ? "" : "s") + '</span>' +
+        '<span class="sk-best"> \u00B7 best ' + bst + '</span></span></div>' +
+        '<div class="sk-strip">' + strip + '</div></li>';
+    });
+    h += '</ul>';
+    h += '<div class="sk-legend"><span class="sk-leg"><span class="sk-dot on"></span>done</span>' +
+      '<span class="sk-leg"><span class="sk-dot"></span>missed</span></div>';
+    return h;
+  }
+
+  // ---- markup: appearance ----
+  function appearHTML() {
+    var isDefault = String(appearance.bg || "").toUpperCase() === DEFAULT_BG.toUpperCase();
+    return '<footer class="appear"><span class="appear-lab">Background</span>' +
+      '<input type="color" class="accent-picker" id="bgInput" value="' + esc(appearance.bg || DEFAULT_BG) + '" aria-label="Background color">' +
+      (isDefault ? '' : '<button class="link" data-act="bg-revert">Revert</button>') +
+      '</footer>';
+  }
+
+  function dataFootHTML() {
+    if (importConfirm && pendingImport) {
+      return '<footer class="data-foot"><span class="reset-confirm">Replace everything with this backup?' +
+        '<button class="link danger" data-act="import-yes">Yes, replace</button>' +
+        '<button class="link" data-act="import-no">Cancel</button></span></footer>';
+    }
+    return '<footer class="data-foot">' +
+      '<button class="link" data-act="export">Export</button>' +
+      '<button class="link" data-act="import">Import</button>' +
+      (importError ? '<span class="data-err">' + esc(importError) + '</span>' : '') +
+      '<input type="file" id="importFile" accept="application/json,.json" style="display:none"></footer>';
+  }
+
+  // ---- render ----
+  function render() {
+    var html = headerHTML() + tabsHTML();
+    if (view === "streak") html += streakHTML();
+    else if (view === "habits") html += habitsListHTML();
+    else html += taskViewHTML(TAB_OF[view]);
+    html += appearHTML();
+    html += dataFootHTML();
+    app.innerHTML = html;
+
+    if (renameId != null) {
+      var ri = app.querySelector(".rename-input");
+      if (ri) { ri.focus(); var v = ri.value; ri.value = ""; ri.value = v; }
+    }
+  }
+
+  // ---- events (delegated; #app persists across renders) ----
+  app.addEventListener("click", function (e) {
+    var skCell = e.target.closest(".sk-cell");
+    if (skCell) {
+      var wasOpen = skCell.classList.contains("tip-open");
+      var opened = app.querySelectorAll(".sk-cell.tip-open");
+      for (var oi = 0; oi < opened.length; oi++) opened[oi].classList.remove("tip-open");
+      if (!wasOpen) skCell.classList.add("tip-open");
+      return;
+    }
+    var el = e.target.closest("[data-act]");
+    var act = el ? el.getAttribute("data-act") : null;
+    var id = el ? el.getAttribute("data-id") : null;
+
+    // commit an in-progress rename when clicking away (but let the row's own delete act run)
+    if (renameId != null && act !== "del") {
+      var rrow = e.target.closest(".row");
+      var sameRow = rrow && rrow.getAttribute("data-id") === renameId;
+      if (!sameRow) { commitRename(); if (!el) return; }
+    }
+    // close the move menu on any click that isn't opening or using it
+    if (openMoveId && act !== "move-open" && act !== "move" && act !== "rename" && act !== "del") {
+      openMoveId = null;
+      if (!el) { render(); return; }
+    }
+    if (!el) return;
+
+    if (act === "nav-tab") { view = el.getAttribute("data-view"); streakWin = 0; openMoveId = null; renameId = null; renameOrig = null; render(); }
+    else if (act === "toggle") toggle(id);
+    else if (act === "day-toggle") toggleHabitDay(el.getAttribute("data-habit"), el.getAttribute("data-date"));
+    else if (act === "add") { if (view === "habits") addHabit(); else addTask(); }
+    else if (act === "del") { if (view === "habits") remove(id); else removeTask(id); }
+    else if (act === "task-toggle") toggleTask(id);
+    else if (act === "rename") enterRename(id);
+    else if (act === "rename-done") commitRename();
+    else if (act === "move-open") { openMoveId = (openMoveId === id ? null : id); render(); }
+    else if (act === "move") moveTask(id, el.getAttribute("data-to"));
+    else if (act === "toggle-done") { doneOpen = !doneOpen; render(); }
+    else if (act === "undone") undone(id);
+    else if (act === "streak-prev") { streakWin++; render(); }
+    else if (act === "streak-next") { if (streakWin > 0) streakWin--; render(); }
+    else if (act === "bg-revert") { appearance.bg = DEFAULT_BG; saveAppearance(); applyTheme(); render(); }
+    else if (act === "export") exportData();
+    else if (act === "import") { importError = ""; var fi = document.getElementById("importFile"); if (fi) fi.click(); }
+    else if (act === "import-yes") applyImport();
+    else if (act === "import-no") { importConfirm = false; pendingImport = null; render(); }
+  });
+
+  app.addEventListener("input", function (e) {
+    if (e.target.id === "addInput") {
+      newName = e.target.value;
+      var btn = app.querySelector(".add-btn");
+      if (btn) btn.disabled = !newName.trim();
+    } else if (e.target.classList.contains("rename-input")) {
+      var item = curList()[curIndex(renameId)];
+      if (item) { item.name = e.target.value; }
+    } else if (e.target.id === "bgInput") {
+      appearance.bg = e.target.value;   // live preview while dragging
+      saveAppearance(); applyTheme();
+    }
+  });
+
+  app.addEventListener("change", function (e) {
+    if (e.target.id === "bgInput") {
+      appearance.bg = e.target.value;   // commit; re-render to update Revert link
+      saveAppearance(); applyTheme(); render();
+    } else if (e.target.id === "importFile") {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var o = JSON.parse(reader.result);
+          if (!o || (!o.habitData && !o.taskData && !o.appearance)) throw new Error("bad");
+          pendingImport = o; importConfirm = true; importError = ""; render();
+        } catch (err) {
+          pendingImport = null; importConfirm = false; importError = "Couldn't read that file."; render();
+        }
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  // tapping outside #app (page padding) also commits an in-progress rename.
+  // Use the capture phase so containment is judged before any in-app re-render detaches the target.
+  document.addEventListener("click", function (e) {
+    var insideApp = app.contains(e.target);
+    if (renameId == null) return;
+    if (insideApp) return;  // in-app clicks are handled by the app listener
+    commitRename();
+  }, true);
+
+  app.addEventListener("keydown", function (e) {
+    if (e.target.id === "addInput" && e.key === "Enter") { if (view === "habits") addHabit(); else addTask(); }
+    else if (e.target.classList.contains("rename-input")) {
+      if (e.key === "Enter") { e.preventDefault(); commitRename(); }
+      else if (e.key === "Escape") { e.preventDefault(); cancelRename(); }
+    }
+  });
+
+  // ---- drag-to-reorder (task tabs only; pointer-based, touch-friendly) ----
+  var drag = null;
+  function getDragAfter(ul, y) {
+    var rows = Array.prototype.slice.call(ul.querySelectorAll(".row[data-id]:not(.dragging)"));
+    var closest = null, closestOffset = -Infinity;
+    rows.forEach(function (r) {
+      var box = r.getBoundingClientRect();
+      var offset = y - (box.top + box.height / 2);
+      if (offset < 0 && offset > closestOffset) { closestOffset = offset; closest = r; }
+    });
+    return closest;
+  }
+  function onDragMove(e) {
+    if (!drag) return;
+    if (Math.abs(e.clientY - drag.startY) > 3) drag.moved = true;
+    var after = getDragAfter(drag.ul, e.clientY);
+    if (after == null) {
+      var addRow = drag.ul.querySelector(".add-row");
+      if (addRow) drag.ul.insertBefore(drag.el, addRow); else drag.ul.appendChild(drag.el);
+    } else {
+      drag.ul.insertBefore(drag.el, after);
+    }
+  }
+  function onDragUp() {
+    if (!drag) return;
+    document.removeEventListener("pointermove", onDragMove);
+    document.removeEventListener("pointerup", onDragUp);
+    drag.el.classList.remove("dragging");
+    var moved = drag.moved, ul = drag.ul;
+    drag = null;
+    if (moved) {
+      var ids = Array.prototype.slice.call(ul.querySelectorAll(".row[data-id]")).map(function (r) { return r.getAttribute("data-id"); });
+      if (view === "habits") commitHabitOrder(ids);
+      else commitDragOrder(TAB_OF[view], ids);
+    }
+  }
+  app.addEventListener("pointerdown", function (e) {
+    var grip = e.target.closest(".grip");
+    if (!grip) return;
+    if (renameId != null) return;
+    var li = grip.closest(".row");
+    if (!li) return;
+    e.preventDefault();
+    drag = { id: li.getAttribute("data-id"), el: li, ul: li.parentNode, startY: e.clientY, moved: false };
+    li.classList.add("dragging");
+    try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+    document.addEventListener("pointermove", onDragMove);
+    document.addEventListener("pointerup", onDragUp);
+  });
+
+  load();
+  applyTheme();
+  render();
+})();
+</script>
+
+
+</body></html>
