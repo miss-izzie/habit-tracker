@@ -1020,10 +1020,8 @@
     });
     return closest;
   }
-  function onDragMove(e) {
-    if (!drag) return;
-    if (Math.abs(e.clientY - drag.startY) > 3) drag.moved = true;
-    var after = getDragAfter(drag.ul, e.clientY);
+  function applyDragPosition(y) {
+    var after = getDragAfter(drag.ul, y);
     if (after == null) {
       var addRow = drag.ul.querySelector(".add-row:last-child");  // only when the field sits below the list
       if (addRow) drag.ul.insertBefore(drag.el, addRow); else drag.ul.appendChild(drag.el);
@@ -1031,10 +1029,31 @@
       drag.ul.insertBefore(drag.el, after);
     }
   }
+  // auto-scroll while dragging near the viewport edge (runs every frame, so it
+  // keeps scrolling even when the pointer holds still at the edge)
+  var SCROLL_ZONE = 72, SCROLL_MAX = 14;
+  function dragAutoScroll() {
+    if (!drag) return;
+    var y = drag.lastY, vh = window.innerHeight, dy = 0;
+    if (y < SCROLL_ZONE) dy = -Math.ceil((SCROLL_ZONE - y) / SCROLL_ZONE * SCROLL_MAX);
+    else if (y > vh - SCROLL_ZONE) dy = Math.ceil((y - (vh - SCROLL_ZONE)) / SCROLL_ZONE * SCROLL_MAX);
+    if (dy) {
+      window.scrollBy(0, dy);
+      applyDragPosition(y);   // content moved under the pointer; re-evaluate the drop slot
+    }
+    drag.raf = requestAnimationFrame(dragAutoScroll);
+  }
+  function onDragMove(e) {
+    if (!drag) return;
+    drag.lastY = e.clientY;
+    if (Math.abs(e.clientY - drag.startY) > 3) drag.moved = true;
+    applyDragPosition(e.clientY);
+  }
   function onDragUp() {
     if (!drag) return;
     document.removeEventListener("pointermove", onDragMove);
     document.removeEventListener("pointerup", onDragUp);
+    if (drag.raf) cancelAnimationFrame(drag.raf);
     drag.el.classList.remove("dragging");
     var moved = drag.moved, ul = drag.ul;
     drag = null;
@@ -1051,8 +1070,9 @@
     var li = grip.closest(".row");
     if (!li) return;
     e.preventDefault();
-    drag = { id: li.getAttribute("data-id"), el: li, ul: li.parentNode, startY: e.clientY, moved: false };
+    drag = { id: li.getAttribute("data-id"), el: li, ul: li.parentNode, startY: e.clientY, lastY: e.clientY, moved: false, raf: 0 };
     li.classList.add("dragging");
+    drag.raf = requestAnimationFrame(dragAutoScroll);
     try { grip.setPointerCapture(e.pointerId); } catch (err) {}
     document.addEventListener("pointermove", onDragMove);
     document.addEventListener("pointerup", onDragUp);
