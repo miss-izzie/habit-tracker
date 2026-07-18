@@ -100,6 +100,10 @@
   .grip:hover { color: var(--muted); }
   .grip:active { cursor: grabbing; }
 
+  .totop { width: 30px; height: 30px; border: none; background: none; color: var(--faint); cursor: pointer; flex: none; padding: 0; display: flex; align-items: center; justify-content: center; transition: color .15s ease; }
+  .totop:hover { color: var(--accent-dark); }
+  .totop-ghost { width: 30px; height: 30px; flex: none; visibility: hidden; }
+
   .strip { display: flex; gap: 0; margin-top: 3px; margin-left: -4px; }
   .daybtn { background: none; border: none; padding: 4px; margin: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; line-height: 0; }
   .daybtn:hover .dot:not(.filled) { background: var(--faint); }
@@ -123,6 +127,7 @@
   .list .empty-line:first-child { border-top: none; }
 
   .add-row { display: flex; gap: 10px; align-items: center; padding: 15px 4px 0; margin-top: 0; border-top: 1px solid var(--line); }
+  .add-row.top { border-top: none; padding: 2px 4px 15px; }
   .add-input { flex: 1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; }
   .add-input::placeholder { color: var(--faint); }
   .add-input:focus { outline: none; border-color: var(--accent); }
@@ -145,6 +150,8 @@
   .done-item:hover { color: var(--ink); }
   .done-item:hover .dmark { color: var(--accent-dark); }
   .dmark { color: var(--accent-text); flex: none; }
+  .arch-best { font-size: 11px; color: var(--faint); margin-left: 2px; }
+  .sk-arch { opacity: .8; }
 
   .foot { margin-top: 22px; font-size: 13px; }
   .link { background: none; border: none; color: var(--muted); cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; padding: 2px 4px; }
@@ -218,6 +225,8 @@
   var SEED = [];
   var CHECK_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   var GRIP_SVG = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="4" r="1.25"></circle><circle cx="10" cy="4" r="1.25"></circle><circle cx="6" cy="8" r="1.25"></circle><circle cx="10" cy="8" r="1.25"></circle><circle cx="6" cy="12" r="1.25"></circle><circle cx="10" cy="12" r="1.25"></circle></g></svg>';
+  var TOTOP_SVG = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M4 2.8h8M8 13.2V5.6M4.9 8.7 8 5.6l3.1 3.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  var ARCH_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 2.5v6.9M5.2 6.6 8 9.4l2.8-2.8M3 12.7h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 
   var TAB_LABEL = { tasklist: "Task List", nextup: "Next Up", todaytasks: "Today", habits: "Habits", streak: "Streak" };
   var TAB_OF = { tasklist: "list", nextup: "nextup", todaytasks: "today" };  // view -> task.tab
@@ -366,6 +375,7 @@
   var appearance = { bg: DEFAULT_BG };
   var view = "habits";            // tasklist | nextup | todaytasks | habits | streak
   var doneOpen = false;
+  var archOpen = false;           // collapsed "Archived" section (Habits + Streak)
   var openMoveId = null;
   var renameId = null;
   var renameOrig = null;
@@ -406,6 +416,10 @@
 
   // ---- derived (habits): streak math lives in the date helpers above ----
 
+  // ---- derived: archive split ----
+  function activeHabits() { return habits.filter(function (h) { return !h.archived; }); }
+  function archivedHabits() { return habits.filter(function (h) { return !!h.archived; }); }
+
   // ---- actions: habits ----
   function toggle(id) {
     var t = today();
@@ -442,7 +456,21 @@
     var byId = {};
     habits.forEach(function (h) { byId[h.id] = h; });
     var next = ids.map(function (id) { return byId[id]; }).filter(Boolean);
-    if (next.length === habits.length) habits = next;
+    var arch = archivedHabits();   // drag only reorders active rows; keep archived appended
+    if (next.length === habits.length - arch.length) habits = next.concat(arch);
+    save(); render();
+  }
+  function archiveHabit(id) {
+    var i = habitIndex(id);
+    if (i < 0) return;
+    habits[i].archived = true;     // history (completions) stays intact
+    if (renameId === id) { renameId = null; renameOrig = null; }
+    save(); render();
+  }
+  function unarchiveHabit(id) {
+    var i = habitIndex(id);
+    if (i < 0) return;
+    delete habits[i].archived;
     save(); render();
   }
 
@@ -460,7 +488,9 @@
   function addTask() {
     var name = newName.trim();
     if (!name) return;
-    tasks.push({ id: uid(), name: name, tab: TAB_OF[view], done: false, doneDate: null });
+    var t = { id: uid(), name: name, tab: TAB_OF[view], done: false, doneDate: null };
+    if (TAB_OF[view] === "list") tasks.unshift(t);  // inbox: newest on top, beside the field
+    else tasks.push(t);
     newName = ""; openMoveId = null;
     save(); render();
     var inp = document.getElementById("addInput");
@@ -470,6 +500,17 @@
     tasks = tasks.filter(function (t) { return t.id !== id; });
     openMoveId = null;
     if (renameId === id) { renameId = null; renameOrig = null; }
+    save(); render();
+  }
+  function moveTaskToTop(id) {
+    var i = taskIndex(id);
+    if (i < 0) return;
+    var t = tasks.splice(i, 1)[0];
+    var first = -1;
+    for (var k = 0; k < tasks.length; k++) {
+      if (tasks[k].tab === t.tab && !tasks[k].done) { first = k; break; }
+    }
+    if (first < 0) tasks.push(t); else tasks.splice(first, 0, t);
     save(); render();
   }
   function moveTask(id, tab) {
@@ -560,8 +601,9 @@
   function subFor() {
     if (view === "habits") {
       var t = today();
-      var done = habits.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
-      var total = habits.length;
+      var hs = activeHabits();
+      var done = hs.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
+      var total = hs.length;
       return total === 0 ? "No habits yet — add your first below."
         : done === total ? "All done. Quietly excellent."
         : done + " of " + total + " done so far.";
@@ -577,8 +619,9 @@
     var isHabit = (view === "habits" || view === "streak");
     if (isHabit) {
       var t = today();
-      var done = habits.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
-      var total = habits.length, pct = total ? done / total : 0, R = 30, C = 2 * Math.PI * R;
+      var hs = activeHabits();
+      var done = hs.filter(function (h) { return (completions[h.id] || []).indexOf(t) !== -1; }).length;
+      var total = hs.length, pct = total ? done / total : 0, R = 30, C = 2 * Math.PI * R;
       return '<div class="ring-wrap" aria-hidden="true"><svg width="78" height="78" viewBox="0 0 78 78">' +
         '<circle cx="39" cy="39" r="' + R + '" class="ring-bg"></circle>' +
         '<circle cx="39" cy="39" r="' + R + '" class="ring-fg" stroke-dasharray="' + C + '" stroke-dashoffset="' + (C * (1 - pct)) + '" transform="rotate(-90 39 39)"></circle>' +
@@ -656,11 +699,17 @@
   }
   function taskViewHTML(tabVal) {
     var items = tasks.filter(function (t) { return t.tab === tabVal && !t.done; });
+    var addAtTop = (tabVal === "list");         // Task List = capture inbox: field on top
+    var hasToTop = (tabVal !== "today");        // move-to-top arrow on the long-list tabs
+    var addRow = '<li class="add-row' + (addAtTop ? " top" : "") + '">' +
+      '<input class="add-input" id="addInput" placeholder="' + esc(addPlaceholder(tabVal)) + '" value="' + esc(newName) + '" aria-label="New task">' +
+      '<button class="add-btn" data-act="add"' + (newName.trim() ? "" : " disabled") + '>Add</button></li>';
     var h = '<ul class="list">';
+    if (addAtTop) h += addRow;
     if (!items.length) {
       h += '<li class="empty-line">' + esc(emptyLine(tabVal)) + '</li>';
     }
-    items.forEach(function (t) {
+    items.forEach(function (t, idx) {
       var renaming = (renameId === t.id);
       h += '<li class="row" data-id="' + t.id + '">';
       if (renaming) {
@@ -675,13 +724,20 @@
         } else {
           h += '<div class="mid"><button class="taprow stage" data-act="rename" data-id="' + t.id + '" title="Tap to edit">' + esc(t.name) + '</button></div>';
         }
-        h += '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button>';
+        var grip = '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button>';
+        if (hasToTop) {
+          h += '<div class="hctl">' + grip +
+            (idx > 0
+              ? '<button class="totop" data-act="to-top" data-id="' + t.id + '" aria-label="Move to top" title="Move to top">' + TOTOP_SVG + '</button>'
+              : '<span class="totop-ghost" aria-hidden="true"></span>') + '</div>';
+        } else {
+          h += grip;
+        }
       }
       h += '</li>';
     });
-    h += '<li class="add-row">' +
-      '<input class="add-input" id="addInput" placeholder="' + esc(addPlaceholder(tabVal)) + '" value="' + esc(newName) + '" aria-label="New task">' +
-      '<button class="add-btn" data-act="add"' + (newName.trim() ? "" : " disabled") + '>Add</button></li></ul>';
+    if (!addAtTop) h += addRow;
+    h += '</ul>';
     if (tabVal === "today") h += doneLogHTML();
     return h;
   }
@@ -690,7 +746,7 @@
   function habitsListHTML() {
     var t = today();
     var h = '<ul class="list">';
-    habits.forEach(function (hh) {
+    activeHabits().forEach(function (hh) {
       var dates = completions[hh.id] || [];
       var isDone = dates.indexOf(t) !== -1;
       var streak = streakOf(dates);
@@ -708,7 +764,8 @@
           : '<button class="taprow stage" data-act="rename" data-id="' + hh.id + '" title="Tap to edit">' + esc(hh.name) + '</button>') +
         '<div class="strip">' + stripHTML + '</div></div>' +
         (renaming
-          ? '<button class="iconbtn danger" data-act="del" data-id="' + hh.id + '" aria-label="Delete habit">\u00D7</button>'
+          ? '<div class="editctl"><button class="iconbtn" data-act="archive" data-id="' + hh.id + '" aria-label="Archive habit" title="Archive (keeps history)">' + ARCH_SVG + '</button>' +
+            '<button class="iconbtn danger" data-act="del" data-id="' + hh.id + '" aria-label="Delete habit">\u00D7</button></div>'
           : '<div class="hctl"><div class="streak"><span class="streak-num">' + streak + '</span><span class="streak-lab">day' + (streak === 1 ? "" : "s") + '</span></div>' +
             '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button></div>') +
         '</li>';
@@ -716,6 +773,27 @@
     h += '<li class="add-row">' +
       '<input class="add-input" id="addInput" placeholder="Add a habit\u2026" value="' + esc(newName) + '" aria-label="New habit name">' +
       '<button class="add-btn" data-act="add"' + (newName.trim() ? "" : " disabled") + '>Add</button></li></ul>';
+    h += archivedLogHTML();
+    return h;
+  }
+
+  // ---- markup: archived habits (Habits tab; mirrors the Done log) ----
+  function archivedLogHTML() {
+    var arch = archivedHabits();
+    if (!arch.length) return "";
+    var h = '<div class="donelog"><button class="done-toggle" data-act="toggle-arch">' +
+      (archOpen ? "▾" : "▸") + ' Archived (' + arch.length + ')</button>';
+    if (archOpen) {
+      h += '<ul class="done-items" style="margin-top:11px">';
+      arch.forEach(function (hh) {
+        var best = bestStreakOf(completions[hh.id] || []);
+        h += '<li class="done-li"><button class="done-item" data-act="unarchive" data-id="' + hh.id + '" title="Restore to Habits"><span class="dmark">↩</span>' + esc(hh.name) +
+          (best ? '<span class="arch-best">best ' + best + '</span>' : '') + '</button>' +
+          '<button class="done-del" data-act="del" data-id="' + hh.id + '" aria-label="Delete permanently">×</button></li>';
+      });
+      h += '</ul>';
+    }
+    h += '</div>';
     return h;
   }
 
@@ -739,37 +817,53 @@
       '<button class="sk-arrow" data-act="streak-next"' + (canNext ? "" : " disabled") + ' aria-label="Later weeks">\u203A</button>' +
       '</div>';
 
-    if (!habits.length) {
+    var act = activeHabits(), arch = archivedHabits();
+    if (!act.length && !arch.length) {
       return h + '<div class="empty-line" style="border-top:none">No habits yet \u2014 add some on the Habits tab.</div>';
     }
 
-    h += '<ul class="list sk-list">';
-    habits.forEach(function (hh) {
-      var dates = completions[hh.id] || [];
-      var set = {};
-      dates.forEach(function (x) { set[x] = true; });
-      var cur = streakOf(dates), bst = bestStreakOf(dates);
-      var strip = "";
-      winDays.forEach(function (wd, p) {
-        var on = !!set[wd.ds];
-        var isToday = wd.off === 0;
-        var lab = fullDate(wd.date) + (isToday ? " (today)" : "") + " \u00B7 " + (on ? "done" : "missed");
-        strip += '<span class="sk-cell' + (p >= 14 ? " r" : "") + (isToday ? " is-today" : "") +
-          '" tabindex="0" role="img" aria-label="' + esc(lab) + '">' +
-          '<span class="sk-dot' + (on ? " on" : "") + '"></span>' +
-          '<span class="sk-tip">' + esc(lab) + '</span></span>';
-      });
-      h += '<li class="sk-row"><div class="sk-head">' +
-        '<span class="sk-name">' + esc(hh.name) + '</span>' +
-        '<span class="sk-streak"><span class="sk-cur' + (cur === 0 ? " zero" : "") + '">' + cur + '</span>' +
-        '<span class="sk-lab"> day' + (cur === 1 ? "" : "s") + '</span>' +
-        '<span class="sk-best"> \u00B7 best ' + bst + '</span></span></div>' +
-        '<div class="sk-strip">' + strip + '</div></li>';
-    });
-    h += '</ul>';
+    if (act.length) {
+      h += '<ul class="list sk-list">';
+      act.forEach(function (hh) { h += skRowHTML(hh, winDays); });
+      h += '</ul>';
+    } else {
+      h += '<div class="empty-line" style="border-top:none">No active habits.</div>';
+    }
     h += '<div class="sk-legend"><span class="sk-leg"><span class="sk-dot on"></span>done</span>' +
       '<span class="sk-leg"><span class="sk-dot"></span>missed</span></div>';
+    if (arch.length) {
+      h += '<div class="donelog"><button class="done-toggle" data-act="toggle-arch">' +
+        (archOpen ? "\u25BE" : "\u25B8") + ' Archived (' + arch.length + ')</button>';
+      if (archOpen) {
+        h += '<ul class="list sk-list sk-arch">';
+        arch.forEach(function (hh) { h += skRowHTML(hh, winDays); });
+        h += '</ul>';
+      }
+      h += '</div>';
+    }
     return h;
+  }
+  function skRowHTML(hh, winDays) {
+    var dates = completions[hh.id] || [];
+    var set = {};
+    dates.forEach(function (x) { set[x] = true; });
+    var cur = streakOf(dates), bst = bestStreakOf(dates);
+    var strip = "";
+    winDays.forEach(function (wd, p) {
+      var on = !!set[wd.ds];
+      var isToday = wd.off === 0;
+      var lab = fullDate(wd.date) + (isToday ? " (today)" : "") + " \u00B7 " + (on ? "done" : "missed");
+      strip += '<span class="sk-cell' + (p >= 14 ? " r" : "") + (isToday ? " is-today" : "") +
+        '" tabindex="0" role="img" aria-label="' + esc(lab) + '">' +
+        '<span class="sk-dot' + (on ? " on" : "") + '"></span>' +
+        '<span class="sk-tip">' + esc(lab) + '</span></span>';
+    });
+    return '<li class="sk-row"><div class="sk-head">' +
+      '<span class="sk-name">' + esc(hh.name) + '</span>' +
+      '<span class="sk-streak"><span class="sk-cur' + (cur === 0 ? " zero" : "") + '">' + cur + '</span>' +
+      '<span class="sk-lab"> day' + (cur === 1 ? "" : "s") + '</span>' +
+      '<span class="sk-best"> \u00B7 best ' + bst + '</span></span></div>' +
+      '<div class="sk-strip">' + strip + '</div></li>';
   }
 
   // ---- markup: appearance ----
@@ -847,6 +941,10 @@
     else if (act === "rename-done") commitRename();
     else if (act === "move-open") { openMoveId = (openMoveId === id ? null : id); render(); }
     else if (act === "move") moveTask(id, el.getAttribute("data-to"));
+    else if (act === "to-top") moveTaskToTop(id);
+    else if (act === "archive") archiveHabit(id);
+    else if (act === "unarchive") unarchiveHabit(id);
+    else if (act === "toggle-arch") { archOpen = !archOpen; render(); }
     else if (act === "toggle-done") { doneOpen = !doneOpen; render(); }
     else if (act === "undone") undone(id);
     else if (act === "streak-prev") { streakWin++; render(); }
@@ -927,7 +1025,7 @@
     if (Math.abs(e.clientY - drag.startY) > 3) drag.moved = true;
     var after = getDragAfter(drag.ul, e.clientY);
     if (after == null) {
-      var addRow = drag.ul.querySelector(".add-row");
+      var addRow = drag.ul.querySelector(".add-row:last-child");  // only when the field sits below the list
       if (addRow) drag.ul.insertBefore(drag.el, addRow); else drag.ul.appendChild(drag.el);
     } else {
       drag.ul.insertBefore(drag.el, after);
