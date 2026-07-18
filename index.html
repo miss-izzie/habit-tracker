@@ -161,6 +161,7 @@
 
   .appear { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 13px; }
   .appear-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+  .appear .link { font-size: 12px; }
   .accent-picker { width: 30px; height: 30px; border: 1px solid var(--faint); border-radius: 8px; background: none; padding: 0; cursor: pointer; }
   .accent-picker::-webkit-color-swatch-wrapper { padding: 2px; }
   .accent-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
@@ -829,8 +830,7 @@
     } else {
       h += '<div class="empty-line" style="border-top:none">No active habits.</div>';
     }
-    h += '<div class="sk-legend"><span class="sk-leg"><span class="sk-dot on"></span>done</span>' +
-      '<span class="sk-leg"><span class="sk-dot"></span>missed</span></div>';
+    h += '<div class="sk-legend"><span class="sk-leg"><span class="sk-dot on"></span>done</span></div>';
     if (arch.length) {
       h += '<div class="donelog"><button class="done-toggle" data-act="toggle-arch">' +
         (archOpen ? "\u25BE" : "\u25B8") + ' Archived (' + arch.length + ')</button>';
@@ -852,7 +852,7 @@
     winDays.forEach(function (wd, p) {
       var on = !!set[wd.ds];
       var isToday = wd.off === 0;
-      var lab = fullDate(wd.date) + (isToday ? " (today)" : "") + " \u00B7 " + (on ? "done" : "missed");
+      var lab = fullDate(wd.date) + (isToday ? " (today)" : "") + (on ? " \u00B7 done" : "");
       strip += '<span class="sk-cell' + (p >= 14 ? " r" : "") + (isToday ? " is-today" : "") +
         '" tabindex="0" role="img" aria-label="' + esc(lab) + '">' +
         '<span class="sk-dot' + (on ? " on" : "") + '"></span>' +
