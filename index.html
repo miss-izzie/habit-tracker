@@ -122,6 +122,8 @@
   .iconbtn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; flex: none; display: flex; align-items: center; justify-content: center; }
   .iconbtn:hover { border-color: var(--faint); color: var(--ink); }
   .iconbtn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .confirm-del { height: 28px; border: 1px solid var(--danger); border-radius: 8px; background: none; color: var(--danger); font-family: inherit; font-size: 12px; padding: 0 9px; cursor: pointer; flex: none; }
+  .confirm-del:hover { background: var(--accent-tint); }
 
   .empty-line { color: var(--faint); font-size: 14px; padding: 18px 4px; border-top: 1px solid var(--line); }
   .list .empty-line:first-child { border-top: none; }
@@ -161,7 +163,7 @@
 
   .appear { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 13px; }
   .appear-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
-  .appear .link { font-size: 12px; }
+  .appear .link { font-size: 12px; margin-left: -4px; }  /* cancel the link's click-padding so the Revert gap optically matches */
   .accent-picker { width: 30px; height: 30px; border: 1px solid var(--faint); border-radius: 8px; background: none; padding: 0; cursor: pointer; }
   .accent-picker::-webkit-color-swatch-wrapper { padding: 2px; }
   .accent-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
@@ -169,6 +171,10 @@
   .data-foot { margin-top: 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; flex-wrap: wrap; }
   .data-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
   .data-err { color: var(--danger); font-size: 12px; }
+  .backup-line { display: inline-flex; align-items: center; gap: 1px; }
+  .backup-ok { color: var(--muted); font-size: 12px; }
+  .backup-off { padding: 2px 4px; color: var(--faint); }
+  .backup-off:hover { color: var(--danger); }
 
   button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -377,6 +383,7 @@
   var view = "habits";            // tasklist | nextup | todaytasks | habits | streak
   var doneOpen = false;
   var archOpen = false;           // collapsed "Archived" section (Habits + Streak)
+  var confirmDelId = null;        // habit delete armed ("Sure?" showing) for this id
   var openMoveId = null;
   var renameId = null;
   var renameOrig = null;
@@ -410,6 +417,7 @@
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify({ habits: habits, completions: completions })); } catch (e) {}
     try { localStorage.setItem(TASK_KEY, JSON.stringify({ tasks: tasks })); } catch (e) {}
+    scheduleBackup();   // keep the auto-backup file current (debounced; no-op if not set up)
   }
   function saveAppearance() {
     try { localStorage.setItem(APPEAR_KEY, JSON.stringify(appearance)); } catch (e) {}
@@ -514,12 +522,24 @@
     if (first < 0) tasks.push(t); else tasks.splice(first, 0, t);
     save(); render();
   }
+  var TAB_RANK = { list: 0, nextup: 1, today: 2 };   // pipeline order
   function moveTask(id, tab) {
     var i = taskIndex(id);
     if (i < 0) return;
     var t = tasks.splice(i, 1)[0];
+    var backward = TAB_RANK[tab] < TAB_RANK[t.tab];  // demotion = back down the pipeline
     t.tab = tab; t.done = false; t.doneDate = null;
-    tasks.push(t);              // lands at the end of its new tab group
+    if (backward) {
+      // demoted items surface at the TOP of the receiving tab: already vetted,
+      // and a wrong landing up here is visible (and cheap) to correct
+      var first = -1;
+      for (var k = 0; k < tasks.length; k++) {
+        if (tasks[k].tab === tab && !tasks[k].done) { first = k; break; }
+      }
+      if (first < 0) tasks.push(t); else tasks.splice(first, 0, t);
+    } else {
+      tasks.push(t);            // promotion joins the back of the queue (arrival order = priority)
+    }
     openMoveId = null;
     save(); render();
   }
@@ -570,15 +590,17 @@
   }
 
   // ---- actions: backup ----
-  function exportData() {
-    var payload = {
+  function backupPayload() {
+    return JSON.stringify({
       app: "habit-task-tracker", version: 1, exportedAt: new Date().toISOString(),
       habitData: { habits: habits, completions: completions },
       taskData: { tasks: tasks },
       appearance: { bg: appearance.bg || DEFAULT_BG }
-    };
+    }, null, 2);
+  }
+  function exportData() {
     try {
-      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var blob = new Blob([backupPayload()], { type: "application/json" });
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url; a.download = "habit-tracker-backup-" + today() + ".json";
@@ -596,6 +618,132 @@
     }
     importConfirm = false; pendingImport = null; importError = "";
     view = "habits"; render();
+  }
+
+  // ---- auto-backup (File System Access; desktop Chrome — feature-gated, invisible elsewhere) ----
+  var FSA = typeof window.showSaveFilePicker === "function";
+  var BACKUP_META_KEY = "habit-backup-meta-v1";
+  var backupHandle = null;      // FileSystemFileHandle, kept in IndexedDB (not serializable to localStorage)
+  var backupMeta = null;        // { last: ISO, name } in localStorage, for the footer line
+  var backupState = "";         // "" | "needs-click" | "error"
+  var backupTimer = 0;
+
+  function idbOpen() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open("habit-backup", 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore("kv"); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function idbGet(key) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var q = db.transaction("kv").objectStore("kv").get(key);
+        q.onsuccess = function () { res(q.result); };
+        q.onerror = function () { rej(q.error); };
+      });
+    });
+  }
+  function idbSet(key, val) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction("kv", "readwrite");
+        tx.objectStore("kv").put(val, key);
+        tx.oncomplete = function () { res(); };
+        tx.onerror = function () { rej(tx.error); };
+      });
+    });
+  }
+  function idbDel(key) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res) {
+        var tx = db.transaction("kv", "readwrite");
+        tx.objectStore("kv").delete(key);
+        tx.oncomplete = function () { res(); };
+        tx.onerror = function () { res(); };
+      });
+    });
+  }
+
+  function loadBackupMeta() {
+    try { backupMeta = JSON.parse(localStorage.getItem(BACKUP_META_KEY)) || null; } catch (e) { backupMeta = null; }
+  }
+  function backupLineHTML() {
+    if (!FSA) return "";
+    var h = '<span id="backupLine" class="backup-line">';
+    if (backupState === "needs-click") {
+      h += '<button class="link" data-act="backup-resume" title="Chrome needs one click to reopen the backup file">Resume auto-backup</button>';
+    } else if (backupState === "error") {
+      h += '<button class="link" data-act="backup-setup" title="Couldn’t write the backup file — pick it again">Auto-backup: re-pick file</button>';
+    } else if (backupHandle || backupMeta) {
+      var d = backupMeta && backupMeta.last ? new Date(backupMeta.last) : null;
+      h += '<span class="backup-ok" title="Backs up automatically while you use the app' +
+        (backupMeta && backupMeta.name ? " → " + esc(backupMeta.name) : "") + '">Auto-backup · ' +
+        (d ? esc(shortDate(d)) : "on") + '</span>' +
+        '<button class="link backup-off" data-act="backup-off" aria-label="Turn off auto-backup" title="Turn off auto-backup">×</button>';
+    } else {
+      h += '<button class="link" data-act="backup-setup" title="Pick a file once (e.g. in your Drive folder); the app keeps it up to date automatically">Auto-backup</button>';
+    }
+    return h + '</span>';
+  }
+  function updateBackupLine() {
+    var el = app.querySelector("#backupLine");
+    if (el) el.outerHTML = backupLineHTML();   // targeted swap: no full render, no focus loss
+  }
+  function writeBackup() {
+    if (!backupHandle) return Promise.resolve();
+    return backupHandle.createWritable().then(function (w) {
+      return w.write(backupPayload()).then(function () { return w.close(); });
+    }).then(function () {
+      backupMeta = { last: new Date().toISOString(), name: backupHandle.name };
+      try { localStorage.setItem(BACKUP_META_KEY, JSON.stringify(backupMeta)); } catch (e) {}
+      backupState = "";
+      updateBackupLine();
+    }).catch(function () {
+      backupState = "error";
+      updateBackupLine();
+    });
+  }
+  function scheduleBackup() {
+    if (!backupHandle || backupState) return;
+    clearTimeout(backupTimer);
+    backupTimer = setTimeout(writeBackup, 1500);
+  }
+  function setupBackup() {
+    window.showSaveFilePicker({
+      suggestedName: "habit-tracker-backup.json",
+      types: [{ description: "JSON backup", accept: { "application/json": [".json"] } }]
+    }).then(function (h) {
+      backupHandle = h; backupState = "";
+      idbSet("backupFile", h).catch(function () {});
+      return writeBackup();
+    }).catch(function () {});    // picker cancelled — no change
+  }
+  function resumeBackup() {
+    if (!backupHandle) return;
+    backupHandle.requestPermission({ mode: "readwrite" }).then(function (p) {
+      if (p === "granted") { backupState = ""; writeBackup(); }
+    }).catch(function () {});
+  }
+  function backupOff() {
+    backupHandle = null; backupMeta = null; backupState = "";
+    clearTimeout(backupTimer);
+    try { localStorage.removeItem(BACKUP_META_KEY); } catch (e) {}
+    idbDel("backupFile");
+    updateBackupLine();
+  }
+  function initBackup() {
+    if (!FSA) return;
+    loadBackupMeta();
+    idbGet("backupFile").then(function (h) {
+      if (!h) { updateBackupLine(); return; }
+      backupHandle = h;
+      return h.queryPermission({ mode: "readwrite" }).then(function (p) {
+        if (p === "granted") writeBackup();
+        else { backupState = "needs-click"; updateBackupLine(); }
+      });
+    }).catch(function () {});
   }
 
   // ---- markup: header ----
@@ -766,7 +914,9 @@
         '<div class="strip">' + stripHTML + '</div></div>' +
         (renaming
           ? '<div class="editctl"><button class="iconbtn" data-act="archive" data-id="' + hh.id + '" aria-label="Archive habit" title="Archive (keeps history)">' + ARCH_SVG + '</button>' +
-            '<button class="iconbtn danger" data-act="del" data-id="' + hh.id + '" aria-label="Delete habit">\u00D7</button></div>'
+            (confirmDelId === hh.id
+              ? '<button class="confirm-del" data-act="del" data-id="' + hh.id + '" aria-label="Confirm delete">Sure?</button>'
+              : '<button class="iconbtn danger" data-act="del" data-id="' + hh.id + '" aria-label="Delete habit">\u00D7</button>') + '</div>'
           : '<div class="hctl"><div class="streak"><span class="streak-num">' + streak + '</span><span class="streak-lab">day' + (streak === 1 ? "" : "s") + '</span></div>' +
             '<button class="grip" data-grip="1" aria-label="Drag to reorder">' + GRIP_SVG + '</button></div>') +
         '</li>';
@@ -790,7 +940,9 @@
         var best = bestStreakOf(completions[hh.id] || []);
         h += '<li class="done-li"><button class="done-item" data-act="unarchive" data-id="' + hh.id + '" title="Restore to Habits"><span class="dmark">↩</span>' + esc(hh.name) +
           (best ? '<span class="arch-best">best ' + best + '</span>' : '') + '</button>' +
-          '<button class="done-del" data-act="del" data-id="' + hh.id + '" aria-label="Delete permanently">×</button></li>';
+          (confirmDelId === hh.id
+            ? '<button class="confirm-del" data-act="del" data-id="' + hh.id + '" aria-label="Confirm delete">Sure?</button>'
+            : '<button class="done-del" data-act="del" data-id="' + hh.id + '" aria-label="Delete permanently">×</button>') + '</li>';
       });
       h += '</ul>';
     }
@@ -884,6 +1036,7 @@
     return '<footer class="data-foot">' +
       '<button class="link" data-act="export">Export</button>' +
       '<button class="link" data-act="import">Import</button>' +
+      backupLineHTML() +
       (importError ? '<span class="data-err">' + esc(importError) + '</span>' : '') +
       '<input type="file" id="importFile" accept="application/json,.json" style="display:none"></footer>';
   }
@@ -918,6 +1071,11 @@
     var act = el ? el.getAttribute("data-act") : null;
     var id = el ? el.getAttribute("data-id") : null;
 
+    // any click that isn't the confirm itself disarms a pending "Sure?"
+    if (confirmDelId != null && act !== "del") {
+      confirmDelId = null;
+      if (!el && renameId == null && !openMoveId) { render(); return; }
+    }
     // commit an in-progress rename when clicking away (but let the row's own delete act run)
     if (renameId != null && act !== "del") {
       var rrow = e.target.closest(".row");
@@ -931,11 +1089,16 @@
     }
     if (!el) return;
 
-    if (act === "nav-tab") { view = el.getAttribute("data-view"); streakWin = 0; openMoveId = null; renameId = null; renameOrig = null; render(); }
+    if (act === "nav-tab") { view = el.getAttribute("data-view"); streakWin = 0; openMoveId = null; renameId = null; renameOrig = null; confirmDelId = null; render(); }
     else if (act === "toggle") toggle(id);
     else if (act === "day-toggle") toggleHabitDay(el.getAttribute("data-habit"), el.getAttribute("data-date"));
     else if (act === "add") { if (view === "habits") addHabit(); else addTask(); }
-    else if (act === "del") { if (view === "habits") remove(id); else removeTask(id); }
+    else if (act === "del") {
+      if (view === "habits") {   // habits carry history: two-tap delete (arm, then confirm)
+        if (confirmDelId === id) { confirmDelId = null; remove(id); }
+        else { confirmDelId = id; render(); }
+      } else removeTask(id);     // tasks stay one-tap: cheap to recreate, bulk sweeps stay fast
+    }
     else if (act === "task-toggle") toggleTask(id);
     else if (act === "rename") enterRename(id);
     else if (act === "rename-done") commitRename();
@@ -954,6 +1117,9 @@
     else if (act === "import") { importError = ""; var fi = document.getElementById("importFile"); if (fi) fi.click(); }
     else if (act === "import-yes") applyImport();
     else if (act === "import-no") { importConfirm = false; pendingImport = null; render(); }
+    else if (act === "backup-setup") setupBackup();
+    else if (act === "backup-resume") resumeBackup();
+    else if (act === "backup-off") backupOff();
   });
 
   app.addEventListener("input", function (e) {
@@ -1081,6 +1247,7 @@
   load();
   applyTheme();
   render();
+  initBackup();
 })();
 </script>
 
