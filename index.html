@@ -172,9 +172,8 @@
   .data-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
   .data-err { color: var(--danger); font-size: 12px; }
   .backup-line { display: inline-flex; align-items: center; gap: 1px; }
-  .backup-ok { color: var(--muted); font-size: 12px; }
-  .backup-off { padding: 2px 4px; color: var(--faint); }
-  .backup-off:hover { color: var(--danger); }
+  .backup-on { display: inline-flex; align-items: center; gap: 6px; }
+  .bk-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
 
   button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -627,6 +626,7 @@
   var backupMeta = null;        // { last: ISO, name } in localStorage, for the footer line
   var backupState = "";         // "" | "needs-click" | "error"
   var backupTimer = 0;
+  var backupOffArm = false;     // "Turn off?" confirm showing
 
   function idbOpen() {
     return new Promise(function (res, rej) {
@@ -677,11 +677,15 @@
     } else if (backupState === "error") {
       h += '<button class="link" data-act="backup-setup" title="Couldn’t write the backup file — pick it again">Auto-backup: re-pick file</button>';
     } else if (backupHandle || backupMeta) {
-      var d = backupMeta && backupMeta.last ? new Date(backupMeta.last) : null;
-      h += '<span class="backup-ok" title="Backs up automatically while you use the app' +
-        (backupMeta && backupMeta.name ? " → " + esc(backupMeta.name) : "") + '">Auto-backup · ' +
-        (d ? esc(shortDate(d)) : "on") + '</span>' +
-        '<button class="link backup-off" data-act="backup-off" aria-label="Turn off auto-backup" title="Turn off auto-backup">×</button>';
+      if (backupOffArm) {
+        h += '<button class="confirm-del" data-act="backup-off" aria-label="Confirm turning off auto-backup">Turn off?</button>';
+      } else {
+        var d = backupMeta && backupMeta.last ? new Date(backupMeta.last) : null;
+        var tip = "Backs up automatically while you use the app" +
+          (backupMeta && backupMeta.name ? " → " + backupMeta.name : "") +
+          (d ? " (last: " + shortDate(d) + ")" : "") + " — click to turn off";
+        h += '<button class="link backup-on" data-act="backup-off" title="' + esc(tip) + '"><span class="bk-dot"></span>Auto-backup</button>';
+      }
     } else {
       h += '<button class="link" data-act="backup-setup" title="Pick a file once (e.g. in your Drive folder); the app keeps it up to date automatically">Auto-backup</button>';
     }
@@ -1071,7 +1075,8 @@
     var act = el ? el.getAttribute("data-act") : null;
     var id = el ? el.getAttribute("data-id") : null;
 
-    // any click that isn't the confirm itself disarms a pending "Sure?"
+    // any click that isn't the confirm itself disarms a pending "Turn off?" / "Sure?"
+    if (backupOffArm && act !== "backup-off") { backupOffArm = false; updateBackupLine(); }
     if (confirmDelId != null && act !== "del") {
       confirmDelId = null;
       if (!el && renameId == null && !openMoveId) { render(); return; }
@@ -1119,7 +1124,10 @@
     else if (act === "import-no") { importConfirm = false; pendingImport = null; render(); }
     else if (act === "backup-setup") setupBackup();
     else if (act === "backup-resume") resumeBackup();
-    else if (act === "backup-off") backupOff();
+    else if (act === "backup-off") {   // two-tap, mirroring the habit-delete grammar
+      if (backupOffArm) { backupOffArm = false; backupOff(); }
+      else { backupOffArm = true; updateBackupLine(); }
+    }
   });
 
   app.addEventListener("input", function (e) {
