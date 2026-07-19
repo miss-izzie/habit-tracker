@@ -172,8 +172,8 @@
   .data-lab { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
   .data-err { color: var(--danger); font-size: 12px; }
   .backup-line { display: inline-flex; align-items: center; gap: 1px; }
-  .backup-on { display: inline-flex; align-items: center; gap: 6px; }
-  .bk-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .backup-on { display: inline-flex; align-items: center; gap: 5px; }
+  .bk-check { color: var(--accent); flex: none; }
 
   button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -684,7 +684,8 @@
         var tip = "Backs up automatically while you use the app" +
           (backupMeta && backupMeta.name ? " → " + backupMeta.name : "") +
           (d ? " (last: " + shortDate(d) + ")" : "") + " — click to turn off";
-        h += '<button class="link backup-on" data-act="backup-off" title="' + esc(tip) + '"><span class="bk-dot"></span>Auto-backup</button>';
+        h += '<button class="link backup-on" data-act="backup-off" title="' + esc(tip) + '">' +
+          '<svg class="bk-check" viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Auto-backup</button>';
       }
     } else {
       h += '<button class="link" data-act="backup-setup" title="Pick a file once (e.g. in your Drive folder); the app keeps it up to date automatically">Auto-backup</button>';
